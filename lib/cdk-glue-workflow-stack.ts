@@ -11,7 +11,7 @@ export class CdkGlueWorkflowStack extends cdk.Stack {
 
     // create Glue workflow
     //https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_glue.CfnWorkflow.html
-    const glueWorkflow = new CfnWorkflow(this, `${this.stackName}-Glue-Workflow`, {
+    const glueWorkflow = new CfnWorkflow(this, `${this.stackName}-glue-workflow`, {
       description: 'sample work flow',
       maxConcurrentRuns: 1,
       name: `${this.stackName}-trigger`
@@ -19,10 +19,11 @@ export class CdkGlueWorkflowStack extends cdk.Stack {
 
     // create s3 bucket
     // https://zenn.dev/nmemoto/articles/s3-eventnotification-with-eventbridge
-    const s3Bucket = new Bucket(this, `${this.stackName}-Bucket`, {
+    const s3Bucket = new Bucket(this, `${this.stackName}-s3`, {
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       autoDeleteObjects: true,
       eventBridgeEnabled: true,
+      bucketName: `${(this.stackName).toLowerCase()}-s3`,
     });
 
     // create role and policy
