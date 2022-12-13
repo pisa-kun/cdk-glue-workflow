@@ -74,7 +74,7 @@ export class CdkGlueWorkflowStack extends cdk.Stack {
     const cfnTrigger = new CfnTrigger(this, `${this.stackName}-Trigger`, {
       name: `${this.stackName}-Trigger`,
       workflowName: glueWorkflow.name,
-      type: 'EventBridge event',
+      type: 'EVENT',
       actions:[{
         jobName: `${this.stackName}-job`,
       }]
