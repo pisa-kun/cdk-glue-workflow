@@ -62,7 +62,7 @@ export class CdkGlueWorkflowStack extends cdk.Stack {
       },
       targets:[
         {
-          arn: `arn:aws:glue:ap-northeast-1:674172895730:workflow/${glueWorkflow.name}`,
+          arn: `arn:aws:glue:ap-northeast-1:<id>:workflow/${glueWorkflow.name}`,
           id: "some_id",
           roleArn: glueNotifyRole.roleArn,
         },
