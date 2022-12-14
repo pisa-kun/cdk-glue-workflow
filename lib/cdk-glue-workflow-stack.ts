@@ -100,7 +100,7 @@ export class CdkGlueWorkflowStack extends cdk.Stack {
       command: {
         name: "glueetl", 
         pythonVersion: "3",
-        scriptLocation: "s3://" + s3Bucket.bucketName + "/glue-job.py"
+        scriptLocation: "s3://" + s3Bucket.bucketName + "/glue.py"
       },
       defaultArguments:{
         "--TempDir":"s3://" + s3Bucket.bucketName + "/lib",
