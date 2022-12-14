@@ -75,7 +75,7 @@ export class CdkGlueWorkflowStack extends cdk.Stack {
     });
     
     // Add AWSGlueServiceRole to role.
-    const gluePolicy = cdk.aws_iam.ManagedPolicy.fromAwsManagedPolicyName("service-role/AWSGlueServiceRole");
+    const gluePolicy = ManagedPolicy.fromAwsManagedPolicyName("service-role/AWSGlueServiceRole");
     role.addManagedPolicy(gluePolicy);
 
     s3Bucket.grantReadWrite(role);
@@ -115,15 +115,15 @@ export class CdkGlueWorkflowStack extends cdk.Stack {
 
     // // Setting glue workflow
     // // https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_glue.CfnTrigger.html
-    const cfnTrigger = new CfnTrigger(this, `${this.stackName}-Trigger`, {
-      name: `${this.stackName}-Trigger`,
-      workflowName: glueWorkflow.name,
-      type: 'EVENT',
-      actions:[{
-        jobName: glueJob.name,
-      }]
+    // const cfnTrigger = new CfnTrigger(this, `${this.stackName}-Trigger`, {
+    //   name: `${this.stackName}-Trigger`,
+    //   workflowName: glueWorkflow.name,
+    //   type: 'EVENT',
+    //   actions:[{
+    //     jobName: glueJob.name,
+    //   }]
 
-    });
+    // });
 
   }
 }
