@@ -2,8 +2,9 @@ import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { CfnRule } from 'aws-cdk-lib/aws-events';
-import { CfnTrigger, CfnWorkflow } from 'aws-cdk-lib/aws-glue';
-import { Effect, ManagedPolicy, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
+import { CfnJob, CfnTrigger, CfnWorkflow } from 'aws-cdk-lib/aws-glue';
+import { Effect, ManagedPolicy, Policy, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
+import { BucketDeployment, Source } from 'aws-cdk-lib/aws-s3-deployment';
 
 export class CdkGlueWorkflowStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -13,8 +14,7 @@ export class CdkGlueWorkflowStack extends cdk.Stack {
     //https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_glue.CfnWorkflow.html
     const glueWorkflow = new CfnWorkflow(this, `${this.stackName}-glue-workflow`, {
       description: 'sample work flow',
-      maxConcurrentRuns: 1,
-      name: `${this.stackName}-trigger`
+      name: `${this.stackName}-workflow`
     });
 
     // create s3 bucket
@@ -49,7 +49,7 @@ export class CdkGlueWorkflowStack extends cdk.Stack {
       ]
     });
 
-    // // https://repost.aws/questions/QUUuqr0SKyQ6StAkOJzWLyTQ/adding-etl-workflow-to-event-rule
+    // https://repost.aws/questions/QUUuqr0SKyQ6StAkOJzWLyTQ/adding-etl-workflow-to-event-rule
     new CfnRule(this, `${this.stackName}-Rule`, {
       eventPattern: {
         'source': ['aws.s3'],
@@ -57,7 +57,7 @@ export class CdkGlueWorkflowStack extends cdk.Stack {
         'detail':{
           'bucket':{
             'name': [s3Bucket.bucketName],
-            'key':[{'prefix':'input/'}]
+            'key':[{'prefix':'in/'}]
           }
         }
       },
@@ -70,6 +70,49 @@ export class CdkGlueWorkflowStack extends cdk.Stack {
       ]
     });
 
+    const role = new cdk.aws_iam.Role(this, "access-glue-job", {
+      assumedBy: new cdk.aws_iam.ServicePrincipal('glue.amazonaws.com'),
+    });
+    
+    // Add AWSGlueServiceRole to role.
+    const gluePolicy = cdk.aws_iam.ManagedPolicy.fromAwsManagedPolicyName("service-role/AWSGlueServiceRole");
+    role.addManagedPolicy(gluePolicy);
+
+    s3Bucket.grantReadWrite(role);
+
+    // Deploy glue job to s3 bucket
+    new BucketDeployment(this, "DeployGlueJobFiles", {
+      sources: [Source.asset("./lib/assets")],
+      destinationBucket: s3Bucket
+    });
+
+    // Deploy csv to s3 bucket
+    new BucketDeployment(this, "DeployTargetFiles", {
+      sources: [Source.asset("./files")],
+      destinationBucket: s3Bucket,
+      destinationKeyPrefix: "in"
+    });
+
+    const glueJob = new cdk.aws_glue.CfnJob(this, "simple-glue-job", {
+      name: "glue-workflow-parquetjob",
+      role: role.roleArn,
+      description: "glue-workflow test",
+      command: {
+        name: "glueetl", 
+        pythonVersion: "3",
+        scriptLocation: "s3://" + s3Bucket.bucketName + "/glue-job.py"
+      },
+      defaultArguments:{
+        "--TempDir":"s3://" + s3Bucket.bucketName + "/lib",
+        "--job-language":"python",
+        "--job-bookmark-option": "job-bookmark-disable",
+        "--output_bucket_name": s3Bucket.bucketName,
+        "--output_prefix_path": "parquet"
+      },
+      glueVersion : "3.0",
+      maxRetries: 0,
+    });
+
     // // Setting glue workflow
     // // https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_glue.CfnTrigger.html
     const cfnTrigger = new CfnTrigger(this, `${this.stackName}-Trigger`, {
@@ -77,7 +120,7 @@ export class CdkGlueWorkflowStack extends cdk.Stack {
       workflowName: glueWorkflow.name,
       type: 'EVENT',
       actions:[{
-        jobName: `${this.stackName}-job`,
+        jobName: glueJob.name,
       }]
 
     });
