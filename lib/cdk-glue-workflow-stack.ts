@@ -1,7 +1,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
-import { CfnRule } from 'aws-cdk-lib/aws-events';
+import { CfnRule, Schedule } from 'aws-cdk-lib/aws-events';
 import { CfnJob, CfnTrigger, CfnWorkflow } from 'aws-cdk-lib/aws-glue';
 import { Effect, ManagedPolicy, Policy, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import { BucketDeployment, Source } from 'aws-cdk-lib/aws-s3-deployment';
@@ -98,16 +98,16 @@ export class CdkGlueWorkflowStack extends cdk.Stack {
       role: role.roleArn,
       description: "glue-workflow test",
       command: {
-        name: "glueetl", 
-        pythonVersion: "3",
+        name: "pythonshell", 
+        pythonVersion: "3.9",
         scriptLocation: "s3://" + s3Bucket.bucketName + "/glue.py"
       },
       defaultArguments:{
         "--TempDir":"s3://" + s3Bucket.bucketName + "/lib",
         "--job-language":"python",
-        "--job-bookmark-option": "job-bookmark-disable",
         "--output_bucket_name": s3Bucket.bucketName,
-        "--output_prefix_path": "parquet"
+        "--output_prefix_path": "parquet",
+        "--BUCKET": s3Bucket.bucketName,
       },
       glueVersion : "3.0",
       maxRetries: 0,
@@ -115,15 +115,19 @@ export class CdkGlueWorkflowStack extends cdk.Stack {
 
     // // Setting glue workflow
     // // https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_glue.CfnTrigger.html
-    // const cfnTrigger = new CfnTrigger(this, `${this.stackName}-Trigger`, {
-    //   name: `${this.stackName}-Trigger`,
-    //   workflowName: glueWorkflow.name,
-    //   type: 'EVENT',
-    //   actions:[{
-    //     jobName: glueJob.name,
-    //   }]
-
-    // });
-
+    const cfnTrigger = new CfnTrigger(this, `${this.stackName}-Trigger`, {
+      name: `${this.stackName}-Trigger`,
+      workflowName: glueWorkflow.name,
+      type: 'SCHEDULED',
+      startOnCreation: true,
+      schedule: "cron(0 4 * * ? *)",
+      actions:[{
+        jobName: glueJob.name,
+        timeout: 360,
+      },
+    ],
+    });
+    cfnTrigger.addDependsOn(glueJob);
+    cfnTrigger.addDependsOn(glueWorkflow);
   }
 }

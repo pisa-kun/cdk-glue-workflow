@@ -8,6 +8,23 @@
 
 https://github.com/aws-samples/glue-workflow-aws-cdk/blob/main/lib/blog-glue-workflow-stack.ts
 
+
+### glue schedule
+
+https://dev.classmethod.jp/articles/what-to-do-when-aws-glue-trigger-does-not-start-automatically/
+
+```py
+    const cfnTrigger = new CfnTrigger(this, `${this.stackName}-Trigger`, {
+      name: `${this.stackName}-Trigger`,
+      workflowName: glueWorkflow.name,
+      type: 'SCHEDULED',
+      startOnCreation: true,
+      schedule: "cron(0 4 * * ? *)",
+```
+
+スケジュール時はstartoncreationをtrueにする必要がある
+https://dev.classmethod.jp/articles/what-to-do-when-aws-glue-trigger-does-not-start-automatically/
+
 ### pyspark job commit
 
 https://github.com/aws-samples/glue-workflow-aws-cdk/blob/main/lib/assets/glue-parquet-etl.py
