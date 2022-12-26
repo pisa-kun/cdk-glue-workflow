@@ -75,3 +75,10 @@ https://dev.classmethod.jp/articles/glue_job_err_notification/
 
 new events.Rule
 https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_events-readme.html
+
+
+#### Error: spawnSync docker ENOENT
+> npm install --save-dev aws-sdk
+> $ npm install --save-dev esbuild@0
+>
+> https://qiita.com/derodero24/items/a0b05ef026f63fca8f03

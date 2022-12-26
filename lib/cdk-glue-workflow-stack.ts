@@ -1,10 +1,12 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
-import { CfnRule, Schedule } from 'aws-cdk-lib/aws-events';
+import { CfnRule, Schedule, Rule } from 'aws-cdk-lib/aws-events';
+import { LambdaFunction, SnsTopic } from 'aws-cdk-lib/aws-events-targets';
 import { CfnJob, CfnTrigger, CfnWorkflow } from 'aws-cdk-lib/aws-glue';
 import { Effect, ManagedPolicy, Policy, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import { BucketDeployment, Source } from 'aws-cdk-lib/aws-s3-deployment';
+import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 
 export class CdkGlueWorkflowStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -129,5 +131,47 @@ export class CdkGlueWorkflowStack extends cdk.Stack {
     });
     cfnTrigger.addDependsOn(glueJob);
     cfnTrigger.addDependsOn(glueWorkflow);
+
+    // lambda
+    const sampleLambda = new NodejsFunction(this, "sampleLambda",{
+      entry: "src/index.ts",
+      handler: "handler",
+    });
+
+    // event rule
+    // {
+    //   "source": [
+    //     "aws.glue"
+    //   ],
+    //   "detail-type": [
+    //     "Glue Job State Change"
+    //   ],
+    //   "detail": {
+    //     "jobName": [
+    //       "glue-job-for-err-notification"
+    //     ],
+    //     "state": [
+    //       "FAILED"
+    //     ]
+    //   }
+    // }
+    const rule = new Rule(this, "glue job error", {
+      eventPattern: {
+        detail: {
+          'jobname': [
+            glueJob.name
+          ],
+          'state': [
+            "FAILED"
+          ]
+        },
+        'detailType': [
+          "Glue Job State Change"
+        ],
+        source: ['aws.glue']
+      },
+      'description': 'glue job error event',
+      targets: [new LambdaFunction(sampleLambda)],
+    });
   }
 }
