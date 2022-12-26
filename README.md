@@ -49,3 +49,29 @@ job.init(job_args['JOB_NAME'], job_args)
 // BOOKMARKに追記
 job.commit()
 ```
+
+#### 失敗時に通知発信
+- job 失敗イベントを受け取る
+https://dev.classmethod.jp/articles/glue_job_err_notification/
+
+```json
+{
+  "source": [
+    "aws.glue"
+  ],
+  "detail-type": [
+    "Glue Job State Change"
+  ],
+  "detail": {
+    "jobName": [
+      "glue-job-for-err-notification"
+    ],
+    "state": [
+      "FAILED"
+    ]
+  }
+}
+```
+
+new events.Rule
+https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_events-readme.html
