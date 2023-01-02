@@ -82,3 +82,13 @@ https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_events-readme.html
 > $ npm install --save-dev esbuild@0
 >
 > https://qiita.com/derodero24/items/a0b05ef026f63fca8f03
+>
+
+#### yamlの読み込み
+https://kakehashi-dev.hatenablog.com/entry/2021/12/20/080000
+
+npm install --save js-yaml
+npm install -D @types/js-yaml
+
+#### node-ts
+> node .\node_modules\ts-node\dist\bin.js .\env\environment.ts
