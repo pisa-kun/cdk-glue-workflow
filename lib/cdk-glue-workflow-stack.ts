@@ -7,10 +7,13 @@ import { CfnJob, CfnTrigger, CfnWorkflow } from 'aws-cdk-lib/aws-glue';
 import { Effect, ManagedPolicy, Policy, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import { BucketDeployment, Source } from 'aws-cdk-lib/aws-s3-deployment';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
+import { Environment } from '../env/environment';
 
 export class CdkGlueWorkflowStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
+
+    const env = new Environment('dev');
 
     // create Glue workflow
     //https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_glue.CfnWorkflow.html
@@ -36,7 +39,7 @@ export class CdkGlueWorkflowStack extends cdk.Stack {
     statement.addActions(
       'glue:notifyEvent'
     );
-    statement.addResources(`arn:aws:glue:ap-northeast-1:<id>:workflow/${glueWorkflow.name}`);
+    statement.addResources(`arn:aws:glue:ap-northeast-1:${env.id}:workflow/${glueWorkflow.name}`);
 
     const managedPolicy = new ManagedPolicy(this, `${this.stackName}-Policy`, {
       description: 'to notfiy glue workflow from eventbridge',
@@ -65,7 +68,7 @@ export class CdkGlueWorkflowStack extends cdk.Stack {
       },
       targets:[
         {
-          arn: `arn:aws:glue:ap-northeast-1:<id>:workflow/${glueWorkflow.name}`,
+          arn: `arn:aws:glue:ap-northeast-1:${env.id}:workflow/${glueWorkflow.name}`,
           id: "some_id",
           roleArn: glueNotifyRole.roleArn,
         },
