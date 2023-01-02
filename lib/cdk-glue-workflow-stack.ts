@@ -155,8 +155,13 @@ export class CdkGlueWorkflowStack extends cdk.Stack {
     //     ]
     //   }
     // }
+    // eventPatternはsource,detailType,detailの順番にする
     const rule = new Rule(this, "glue job error", {
       eventPattern: {
+        source: ['aws.glue'],
+        'detailType': [
+          "Glue Job State Change"
+        ],
         detail: {
           'jobname': [
             glueJob.name
@@ -165,10 +170,6 @@ export class CdkGlueWorkflowStack extends cdk.Stack {
             "FAILED"
           ]
         },
-        'detailType': [
-          "Glue Job State Change"
-        ],
-        source: ['aws.glue']
       },
       'description': 'glue job error event',
       targets: [new LambdaFunction(sampleLambda)],
