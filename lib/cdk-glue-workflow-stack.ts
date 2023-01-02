@@ -8,6 +8,8 @@ import { Effect, ManagedPolicy, Policy, PolicyStatement, Role, ServicePrincipal 
 import { BucketDeployment, Source } from 'aws-cdk-lib/aws-s3-deployment';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { Environment } from '../env/environment';
+import { Topic } from 'aws-cdk-lib/aws-sns';
+import { EmailSubscription } from 'aws-cdk-lib/aws-sns-subscriptions';
 
 export class CdkGlueWorkflowStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -141,6 +143,11 @@ export class CdkGlueWorkflowStack extends cdk.Stack {
       handler: "handler",
     });
 
+    // SNS
+    const notificationTopic = new Topic(this, 'notification-topic-by-email-gluejob', {
+      topicName: 'notification-topic-by-email-gluejob',
+    });
+    notificationTopic.addSubscription(new EmailSubscription(env.email));
     // event rule
     // {
     //   "source": [
@@ -175,7 +182,8 @@ export class CdkGlueWorkflowStack extends cdk.Stack {
         },
       },
       'description': 'glue job error event',
-      targets: [new LambdaFunction(sampleLambda)],
+      //targets: [new LambdaFunction(sampleLambda)],
+      targets: [new SnsTopic(notificationTopic)]
     });
   }
 }
