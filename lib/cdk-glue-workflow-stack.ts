@@ -10,6 +10,7 @@ import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { Environment } from '../env/environment';
 import { Topic } from 'aws-cdk-lib/aws-sns';
 import { EmailSubscription } from 'aws-cdk-lib/aws-sns-subscriptions';
+import { Code, Function, Runtime } from 'aws-cdk-lib/aws-lambda';
 
 export class CdkGlueWorkflowStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -33,52 +34,9 @@ export class CdkGlueWorkflowStack extends cdk.Stack {
       bucketName: `${(this.stackName).toLowerCase()}-s3`,
     });
 
-    // create role and policy
-    // https://wp-kyoto.net/add-iam-role-to-ec2-instance-by-aws-cdk/
-    const statement = new PolicyStatement({
-      effect: Effect.ALLOW,
-    });
-    statement.addActions(
-      'glue:notifyEvent'
-    );
-    statement.addResources(`arn:aws:glue:ap-northeast-1:${env.id}:workflow/${glueWorkflow.name}`);
-
-    const managedPolicy = new ManagedPolicy(this, `${this.stackName}-Policy`, {
-      description: 'to notfiy glue workflow from eventbridge',
-      statements: [statement]
-    });
-
-    // create role
-    const glueNotifyRole = new Role(this, `${this.stackName}-Role`, {
-      assumedBy: new ServicePrincipal("events.amazonaws.com"),
-      managedPolicies: [
-        managedPolicy
-      ]
-    });
-
-    // https://repost.aws/questions/QUUuqr0SKyQ6StAkOJzWLyTQ/adding-etl-workflow-to-event-rule
-    new CfnRule(this, `${this.stackName}-Rule`, {
-      eventPattern: {
-        'source': ['aws.s3'],
-        'detailType':['Object Created'],
-        'detail':{
-          'bucket':{
-            'name': [s3Bucket.bucketName],
-            'key':[{'prefix':'in/'}]
-          }
-        }
-      },
-      targets:[
-        {
-          arn: `arn:aws:glue:ap-northeast-1:${env.id}:workflow/${glueWorkflow.name}`,
-          id: "some_id",
-          roleArn: glueNotifyRole.roleArn,
-        },
-      ]
-    });
-
     const role = new cdk.aws_iam.Role(this, "access-glue-job", {
       assumedBy: new cdk.aws_iam.ServicePrincipal('glue.amazonaws.com'),
+      description: "glue job attach role"
     });
     
     // Add AWSGlueServiceRole to role.
@@ -101,7 +59,7 @@ export class CdkGlueWorkflowStack extends cdk.Stack {
     });
 
     const glueJob = new cdk.aws_glue.CfnJob(this, "simple-glue-job", {
-      name: "glue-workflow-parquetjob",
+      name: `${this.stackName}-glue-job`,
       role: role.roleArn,
       description: "glue-workflow test",
       command: {
@@ -137,17 +95,28 @@ export class CdkGlueWorkflowStack extends cdk.Stack {
     cfnTrigger.addDependsOn(glueJob);
     cfnTrigger.addDependsOn(glueWorkflow);
 
-    // lambda
-    const sampleLambda = new NodejsFunction(this, "sampleLambda",{
-      entry: "src/index.ts",
-      handler: "handler",
-    });
-
     // SNS
     const notificationTopic = new Topic(this, 'notification-topic-by-email-gluejob', {
-      topicName: 'notification-topic-by-email-gluejob',
+      topicName: `${this.stackName}-notificationTopic`,
     });
     notificationTopic.addSubscription(new EmailSubscription(env.email));
+
+    // lambda
+    const sampleLambda = new Function(this, "SampleLambdaHandler", {
+      functionName: `${this.stackName}-${env.id}-lambda-function`,
+      runtime: Runtime.PYTHON_3_9,
+      code: Code.fromAsset('src'),
+      handler: 'index.lambda_handler',
+      environment: {'SNS_ARN' : notificationTopic.topicArn},
+      description: "send sns message",
+    });
+
+    const snsTopicPoliy = new PolicyStatement({
+      actions: ['sns:publish'],
+      resources: ["*"],
+    });
+    sampleLambda.addToRolePolicy(snsTopicPoliy);
+
     // event rule
     // {
     //   "source": [
@@ -173,17 +142,17 @@ export class CdkGlueWorkflowStack extends cdk.Stack {
           "Glue Job State Change"
         ],
         detail: {
-          'jobname': [
-            glueJob.name
+          jobName:[
+            glueJob.name,
           ],
-          'state': [
+          state:[
             "FAILED"
-          ]
+          ],
         },
       },
       'description': 'glue job error event',
-      //targets: [new LambdaFunction(sampleLambda)],
-      targets: [new SnsTopic(notificationTopic)]
+      targets: [new LambdaFunction(sampleLambda)],
+      //targets: [new SnsTopic(notificationTopic)]
     });
   }
 }

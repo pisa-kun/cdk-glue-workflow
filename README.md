@@ -73,6 +73,8 @@ https://dev.classmethod.jp/articles/glue_job_err_notification/
 }
 ```
 
+**jobName**なので注意、Nが大文字
+
 new events.Rule
 https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_events-readme.html
 
@@ -92,3 +94,15 @@ npm install -D @types/js-yaml
 
 #### node-ts
 > node .\node_modules\ts-node\dist\bin.js .\env\environment.ts
+
+https://www.wakuwakubank.com/posts/726-typescript-ts-node/
+
+#### Send SNS from Lambda
+
+https://medium.com/@shimo164/cdk-send-amazon-sns-from-aws-lambda-1a0e6c86073e
+
+```typescript
+    // 1. Set SNS Topic
+    // 1-1 Use existing SNS topic: Hard code the topic arn
+    const myTopic = sns.Topic.fromTopicArn(this, 'MyTopic', <topic-arn>);
+```

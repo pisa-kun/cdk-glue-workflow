@@ -1,6 +1,6 @@
 {
   "name": "cdk-glue-workflow",
-  "version": "0.1.0",
+  "version": "0.7.0",
   "bin": {
     "cdk-glue-workflow": "bin/cdk-glue-workflow.js"
   },
@@ -10,7 +10,7 @@
     "test": "jest",
     "cdk": "cdk",
     "dev": "cdk deploy",
-    "destroy": "cdk destory"
+    "destroy": "cdk destroy"
   },
   "devDependencies": {
     "@types/jest": "^27.5.2",
