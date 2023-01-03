@@ -1,6 +1,6 @@
 {
   "name": "cdk-glue-workflow",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "bin": {
     "cdk-glue-workflow": "bin/cdk-glue-workflow.js"
   },
@@ -13,11 +13,14 @@
     "destroy": "cdk destroy"
   },
   "devDependencies": {
+    "@aws-cdk/aws-lambda-event-sources": "^1.186.1",
+    "@types/aws-lambda": "^8.10.109",
     "@types/jest": "^27.5.2",
     "@types/js-yaml": "^4.0.5",
     "@types/node": "^10.17.27",
     "@types/prettier": "2.6.0",
     "aws-cdk": "2.50.0",
+    "aws-lambda": "^1.0.7",
     "aws-sdk": "^2.1282.0",
     "esbuild": "^0.16.10",
     "jest": "^27.5.1",

@@ -1,18 +1,20 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { Bucket, EventType } from 'aws-cdk-lib/aws-s3';
-import { CfnRule, Schedule, Rule } from 'aws-cdk-lib/aws-events';
+import {  Rule } from 'aws-cdk-lib/aws-events';
 import { LambdaFunction, SnsTopic } from 'aws-cdk-lib/aws-events-targets';
-import { CfnJob, CfnTrigger, CfnWorkflow } from 'aws-cdk-lib/aws-glue';
-import { Effect, ManagedPolicy, Policy, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
+import { CfnTrigger, CfnWorkflow } from 'aws-cdk-lib/aws-glue';
+import { ManagedPolicy, PolicyStatement } from 'aws-cdk-lib/aws-iam';
 import { BucketDeployment, Source } from 'aws-cdk-lib/aws-s3-deployment';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { Environment } from '../env/environment';
 import { Topic } from 'aws-cdk-lib/aws-sns';
-import { EmailSubscription } from 'aws-cdk-lib/aws-sns-subscriptions';
+import { EmailSubscription, SqsSubscription } from 'aws-cdk-lib/aws-sns-subscriptions';
 import { Code, Function, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { SnsDestination } from 'aws-cdk-lib/aws-s3-notifications';
-import { eventNames } from 'process';
+import { Queue } from 'aws-cdk-lib/aws-sqs';
+import * as path from 'path';
+import { SqsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
 
 export class CdkGlueWorkflowStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -47,16 +49,40 @@ export class CdkGlueWorkflowStack extends cdk.Stack {
 
     s3Bucket.grantReadWrite(role);
 
-    // SNS
-    const notificationTopic = new Topic(this, 'notification-topic-by-email-gluejob', {
-      topicName: `${this.stackName}-notificationTopic`,
+    // create sqs queue from ARN
+    // https://medium.com/@shimo164/cdk-send-amazon-sns-from-aws-lambda-1a0e6c86073e
+    // 1-1 Use existing SNS topic: Hard code the topic arn
+    // const myTopic = sns.Topic.fromTopicArn(this, 'MyTopic', <topic-arn>);
+    const queue = new Queue(this, "kaso snowflake sqs origin", {
+      queueName: 'dummy-queue-temp-snowflake-integration',
     });
-    notificationTopic.addSubscription(new EmailSubscription(env.email));
+    // queue.queueArn is Snowflake <ARN>
+    const sqsFromArn = Queue.fromQueueArn(this, 'snowflake sqs', queue.queueArn);
+    const dummyTopic = new Topic(this, "snowflake sqs 2 sns 2 lambda", {topicName: `${this.stackName}-dummy-sns`});
+    dummyTopic.addSubscription(new SqsSubscription(sqsFromArn));
+
+    // create lambda function
+    const polingLambda = new NodejsFunction(this, 'fromArnSqn-fooklambda', {
+      functionName: `${this.stackName}-sqsLambda`,
+      memorySize:1024,
+      runtime: Runtime.NODEJS_16_X,
+      handler: 'main',
+      entry: path.join(__dirname, '/../src/sqs2lambda.ts'),
+      description: 'it logs sqs message',
+    });
+    polingLambda.addEventSource(new SqsEventSource(sqsFromArn, {batchSize: 10,}));
+
+    const polingLambdaPoliy = new PolicyStatement({
+      actions: ['sns:*', 'sqs:*'],
+      resources: ["*"],
+    });
+    polingLambda.addToRolePolicy(polingLambdaPoliy);
+    sqsFromArn.addToResourcePolicy(polingLambdaPoliy);
 
     // import { SnsDestination } from 'aws-cdk-lib/aws-s3-notifications';
     s3Bucket.addEventNotification(
       EventType.OBJECT_CREATED,
-      new SnsDestination(notificationTopic),
+      new SnsDestination(dummyTopic),
       {prefix: 'test/', suffix: '.png'},
     );
 
@@ -109,6 +135,12 @@ export class CdkGlueWorkflowStack extends cdk.Stack {
     });
     cfnTrigger.addDependsOn(glueJob);
     cfnTrigger.addDependsOn(glueWorkflow);
+
+    // SNS
+    const notificationTopic = new Topic(this, 'notification-topic-by-email-gluejob', {
+      topicName: `${this.stackName}-notificationTopic`,
+    });
+    notificationTopic.addSubscription(new EmailSubscription(env.email));
 
     // lambda
     const sampleLambda = new Function(this, "SampleLambdaHandler", {

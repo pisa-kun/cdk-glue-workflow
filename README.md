@@ -92,8 +92,23 @@ https://kakehashi-dev.hatenablog.com/entry/2021/12/20/080000
 npm install --save js-yaml
 npm install -D @types/js-yaml
 
+```yaml
+dev:
+  region: ap-northeast-1
+  id: 00000000000
+  email: hogehoge@gmail.com
+
+stg:
+  region: ap-northeast-2
+  id: 00000000000
+  email: hogehoge@gmail.com
+```
+
 #### node-ts
-> node .\node_modules\ts-node\dist\bin.js .\env\environment.ts
+> node .\node_modules\ts-node\dist\bin.js .\env\environment.ts  
+
+- Best
+> npx ts-node .\env\environment.ts
 
 https://www.wakuwakubank.com/posts/726-typescript-ts-node/
 
@@ -106,3 +121,35 @@ https://medium.com/@shimo164/cdk-send-amazon-sns-from-aws-lambda-1a0e6c86073e
     // 1-1 Use existing SNS topic: Hard code the topic arn
     const myTopic = sns.Topic.fromTopicArn(this, 'MyTopic', <topic-arn>);
 ```
+
+#### add EventNotify to s3
+
+https://bobbyhadz.com/blog/aws-cdk-s3-bucket-event-notifications
+
+```typescript
+    const topic = new sns.Topic(this, 'sns-topic');
+
+    s3Bucket.addEventNotification(
+      s3.EventType.REDUCED_REDUNDANCY_LOST_OBJECT,
+      new s3n.SnsDestination(topic),
+      // 👇 only send message to topic if object matches the filter
+      // {prefix: 'test/', suffix: '.png'},
+    );
+```
+
+#### create sqs from ARN
+https://bobbyhadz.com/blog/aws-cdk-sqs-sns-lambda
+```ts
+const sqs = cdk.aws_sqs.Queue.fromQueueArn(this, 'snowflake sqs', <ARN>);
+```
+
+- sqsEventをlambdaで受け取って処理するために
+https://bobbyhadz.com/blog/aws-cdk-sqs-sns-lambda
+
+> npm i --save-dev aws-lambda @types/aws-lambda
+
+**SQS自身にも**Action:Sqsを追加する必要がある(SQSのアクセスポリシーも追加する必要あり・・・？)
+
+#### s3bucket destination error
+
+> An error occurred (InvalidArgument) when calling the PutBucketNotificationConfiguration operation: Unable to validate the following destination configurations
