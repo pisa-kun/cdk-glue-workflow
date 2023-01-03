@@ -1,6 +1,6 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-import { Bucket } from 'aws-cdk-lib/aws-s3';
+import { Bucket, EventType } from 'aws-cdk-lib/aws-s3';
 import { CfnRule, Schedule, Rule } from 'aws-cdk-lib/aws-events';
 import { LambdaFunction, SnsTopic } from 'aws-cdk-lib/aws-events-targets';
 import { CfnJob, CfnTrigger, CfnWorkflow } from 'aws-cdk-lib/aws-glue';
@@ -11,6 +11,8 @@ import { Environment } from '../env/environment';
 import { Topic } from 'aws-cdk-lib/aws-sns';
 import { EmailSubscription } from 'aws-cdk-lib/aws-sns-subscriptions';
 import { Code, Function, Runtime } from 'aws-cdk-lib/aws-lambda';
+import { SnsDestination } from 'aws-cdk-lib/aws-s3-notifications';
+import { eventNames } from 'process';
 
 export class CdkGlueWorkflowStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -44,6 +46,19 @@ export class CdkGlueWorkflowStack extends cdk.Stack {
     role.addManagedPolicy(gluePolicy);
 
     s3Bucket.grantReadWrite(role);
+
+    // SNS
+    const notificationTopic = new Topic(this, 'notification-topic-by-email-gluejob', {
+      topicName: `${this.stackName}-notificationTopic`,
+    });
+    notificationTopic.addSubscription(new EmailSubscription(env.email));
+
+    // import { SnsDestination } from 'aws-cdk-lib/aws-s3-notifications';
+    s3Bucket.addEventNotification(
+      EventType.OBJECT_CREATED,
+      new SnsDestination(notificationTopic),
+      {prefix: 'test/', suffix: '.png'},
+    );
 
     // Deploy glue job to s3 bucket
     new BucketDeployment(this, "DeployGlueJobFiles", {
@@ -94,12 +109,6 @@ export class CdkGlueWorkflowStack extends cdk.Stack {
     });
     cfnTrigger.addDependsOn(glueJob);
     cfnTrigger.addDependsOn(glueWorkflow);
-
-    // SNS
-    const notificationTopic = new Topic(this, 'notification-topic-by-email-gluejob', {
-      topicName: `${this.stackName}-notificationTopic`,
-    });
-    notificationTopic.addSubscription(new EmailSubscription(env.email));
 
     // lambda
     const sampleLambda = new Function(this, "SampleLambdaHandler", {
