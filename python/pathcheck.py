@@ -12,7 +12,7 @@ def is_targetpath(path: str) -> bool:
         return False
 
     CHECK_DIR = os.path.join('Test','Test-Raw')
-    root_dir = os.path.join(hierach_array[0], hierach_array[1])
+    root_dir = os.sep.join(hierach_array[:2])
     if root_dir != CHECK_DIR:
         return False
     
