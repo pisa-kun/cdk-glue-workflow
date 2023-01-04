@@ -16,7 +16,4 @@ def translate(df: pd.DataFrame) -> pd.DataFrame:
     #df["theme"] = df["theme"].apply(lambda name: name.upper())
     return df
 
-# df = translate()
-# df["name"] = df["name"].apply(lambda name: name.upper())
-# print(df)
 print(translate(initialize()))

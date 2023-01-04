@@ -41,3 +41,24 @@ result = os.sep.join(list1)
 print(result)
 # yyyy/MM/dd/hoge-yyyyMMdd.csv]
 ```
+
+#### pandasのテスト
+
+https://nwpct1.hatenablog.com/entry/pandas-testing
+
+- Usage
+```python
+import pandas as pd
+from pandas.util.testing import assert_frame_equal
+from dataframe import initialize, translate
+
+df = pd.DataFrame({
+    'name': ['rinze', 'natsuha', 'juri', 'kaho', 'chiyoko'],
+    'age': [16, 20, 17, 12, 17],
+    'theme': ['blue', 'green', 'yellow', None , 'pink'],
+})
+
+def test_initialize():
+    # assert_frame_equal(actual_df, expected_df)
+   assert_frame_equal(initialize(), df)
+```
