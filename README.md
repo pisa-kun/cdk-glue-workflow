@@ -207,3 +207,28 @@ if(pathCheck(path)){
 }
 
 ```
+
+#### pytestの網羅率確認
+
+https://qiita.com/mink0212/items/34b9def61d58ab781714
+
+> pip install pytest-cov
+
+> pytest --cov
+
+```powershell
+collected 17 items
+
+test_pathcheck.py .......                                                                          [ 41%]
+test_prime.py ..........                                                                           [100%]
+
+----------- coverage: platform win32, python 3.8.1-final-0 -----------
+Name                Stmts   Miss  Cover
+---------------------------------------
+pathcheck.py            4      0   100%
+prime.py               13      1    92%
+test_pathcheck.py       8      0   100%
+test_prime.py           5      0   100%
+---------------------------------------
+TOTAL                  30      1    97%
+```

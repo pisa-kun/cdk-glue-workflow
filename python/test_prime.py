@@ -24,6 +24,9 @@ import pytest
     (8, False),
     (9, False),
     (10, False),
+    (11, True),
+    (13, True),
+    (15, False),
 ])
 def test_is_prime(number, expected):
     assert is_prime(number) == expected
