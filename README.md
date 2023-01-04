@@ -180,3 +180,30 @@ https://bobbyhadz.com/blog/aws-cdk-iam-principal#account-principal-example-in-aw
       externalIds: [env.id.toString()],
     });
 ```
+
+
+#### python で実装する変換処理
+
+|  -  |  対象ファイル名・フォルダ名  |
+| ---- | ---- |
+|  対象のファイル名  |  hoge-yyyyMMdd.csv  |
+|  保存されているフォルダ  |  Test/Test-Raw/yyyy/MM/dd  |
+|  変換ファイルのフォルダ  |  Test/Test-Load/yyyy/MM/dd  |
+|  変換後にmoveするフォルダ  |  Test/Test-Moved/yyyy/MM/dd  |
+
+1. Test/Test-Load or Test/Test-Moved がターゲットのパスに含まれている場合スキップ
+2. ターゲットのファイルに変換処理を施して、変換元ファイルをmove、変換処理したファイルを変換先に保存
+
+```python
+path = 'Test/Test-Raw/yyyy/MM/dd/hoge-yyyyMMdd.csv'
+if(pathCheck(path)){
+  ## ['Test', 'Test-Raw', 'yyyy','MM','dd', 'hoge-yyyyMMdd.csv']
+  splitArray = split(path)
+  
+  destPath = path.combine(splitArray[0] ,'Test-Load', splitArray[2:4], 'hoge-yyyyMMdd.parquet')
+
+  movedPath = path.combine(splitArray[0] ,'Test-Moved', splitArray[2:4], 'hoge-yyyyMMdd/csv')
+  return destPath, movedPath
+}
+
+```
