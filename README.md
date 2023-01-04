@@ -153,3 +153,18 @@ https://bobbyhadz.com/blog/aws-cdk-sqs-sns-lambda
 #### s3bucket destination error
 
 > An error occurred (InvalidArgument) when calling the PutBucketNotificationConfiguration operation: Unable to validate the following destination configurations
+
+#### snowflake external idの設定
+
+- インラインポリシーとロールをCDKで作る
+https://qiita.com/motchi0214/items/e36f95c08ee208d43148
+
+- snowflakeの設定
+https://docs.snowflake.com/ja/user-guide/data-load-s3-config-storage-integration.html
+
+- roleのassumedByみ外部IDを設定する
+https://bobbyhadz.com/blog/aws-cdk-iam-principal#account-principal-example-in-aws-cdk
+
+```ts
+const role = new Role(this, 'role', assumedBy: new AccountPrincipal('11111111'));
+```

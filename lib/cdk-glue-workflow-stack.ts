@@ -4,7 +4,7 @@ import { Bucket, EventType } from 'aws-cdk-lib/aws-s3';
 import {  Rule } from 'aws-cdk-lib/aws-events';
 import { LambdaFunction, SnsTopic } from 'aws-cdk-lib/aws-events-targets';
 import { CfnTrigger, CfnWorkflow } from 'aws-cdk-lib/aws-glue';
-import { ManagedPolicy, PolicyStatement } from 'aws-cdk-lib/aws-iam';
+import { AccountPrincipal, Effect, ManagedPolicy, Policy, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import { BucketDeployment, Source } from 'aws-cdk-lib/aws-s3-deployment';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { Environment } from '../env/environment';
@@ -20,6 +20,7 @@ export class CdkGlueWorkflowStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
+    const snowflakeEventPrefix = 'test';
     const env = new Environment('dev');
 
     // create Glue workflow
@@ -38,8 +39,8 @@ export class CdkGlueWorkflowStack extends cdk.Stack {
       bucketName: `${(this.stackName).toLowerCase()}-s3`,
     });
 
-    const role = new cdk.aws_iam.Role(this, "access-glue-job", {
-      assumedBy: new cdk.aws_iam.ServicePrincipal('glue.amazonaws.com'),
+    const role = new Role(this, "access-glue-job", {
+      assumedBy: new ServicePrincipal('glue.amazonaws.com'),
       description: "glue job attach role"
     });
     
@@ -48,6 +49,40 @@ export class CdkGlueWorkflowStack extends cdk.Stack {
     role.addManagedPolicy(gluePolicy);
 
     s3Bucket.grantReadWrite(role);
+
+    // snowflake external permission
+    // https://docs.snowflake.com/ja/user-guide/data-load-s3-config-storage-integration.html
+    const servicePolicy = new Policy(
+      this, 'snowflake_access_policy',{
+        policyName: "SnowflakeAccessPolicy",
+        statements:[
+          new PolicyStatement({
+                effect: Effect.ALLOW,
+                actions: ['s3:GetObject', 's3:GetObjectVersion'],
+                resources: [`${s3Bucket.bucketArn}/${snowflakeEventPrefix}/*`],
+          }), 
+          new PolicyStatement({
+                effect: Effect.ALLOW,
+                actions: ['s3:ListBucket', 's3:GetBucketLocation'],
+                resources: [`${s3Bucket.bucketArn}/${snowflakeEventPrefix}`],
+                conditions: {
+                  'StringLike': {
+                    's3:prefix':[
+                      `${snowflakeEventPrefix}/*`
+                    ]
+                  }
+                }
+        })]
+      }
+    );
+    const serviceRole = new Role(this, "SnowflakeExternalRole", {
+      roleName: `${this.stackName}-snowflake-role`,
+      description: 'share this role ARN',
+      // https://bobbyhadz.com/blog/aws-cdk-iam-principal#account-principal-example-in-aws-cdk
+      assumedBy: new AccountPrincipal(env.id.toString()),
+      externalIds: [env.id.toString()],
+    });
+    serviceRole.attachInlinePolicy(servicePolicy);
 
     // create sqs queue from ARN
     // https://medium.com/@shimo164/cdk-send-amazon-sns-from-aws-lambda-1a0e6c86073e
@@ -83,7 +118,7 @@ export class CdkGlueWorkflowStack extends cdk.Stack {
     s3Bucket.addEventNotification(
       EventType.OBJECT_CREATED,
       new SnsDestination(dummyTopic),
-      {prefix: 'test/', suffix: '.png'},
+      {prefix: snowflakeEventPrefix, suffix: '.png'},
     );
 
     // Deploy glue job to s3 bucket
