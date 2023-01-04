@@ -80,7 +80,8 @@ export class CdkGlueWorkflowStack extends cdk.Stack {
       description: 'share this role ARN',
       // https://bobbyhadz.com/blog/aws-cdk-iam-principal#account-principal-example-in-aws-cdk
       assumedBy: new AccountPrincipal(env.id.toString()),
-      externalIds: [env.id.toString()],
+      // dummy external ids
+      externalIds: ['111111111111', '222222222222'],
     });
     serviceRole.attachInlinePolicy(servicePolicy);
 

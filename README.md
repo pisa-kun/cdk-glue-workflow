@@ -166,5 +166,17 @@ https://docs.snowflake.com/ja/user-guide/data-load-s3-config-storage-integration
 https://bobbyhadz.com/blog/aws-cdk-iam-principal#account-principal-example-in-aws-cdk
 
 ```ts
-const role = new Role(this, 'role', assumedBy: new AccountPrincipal('11111111'));
+    const serviceRole = new Role(this, "SnowflakeExternalRole", {
+      roleName: `${this.stackName}-snowflake-role`,
+      description: 'share this role ARN',
+      // https://bobbyhadz.com/blog/aws-cdk-iam-principal#account-principal-example-in-aws-cdk
+      assumedBy: new AccountPrincipal(env.id.toString()),
+
+      //       "Condition": {
+      //     "StringEquals": {
+      //         "sts:ExternalId": "XXXXXXXXXXXX"
+      //     }
+      // }
+      externalIds: [env.id.toString()],
+    });
 ```
