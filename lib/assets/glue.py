@@ -4,10 +4,13 @@ from awsglue.utils import getResolvedOptions
 from pyspark.context import SparkContext
 from awsglue.context import GlueContext
 from awsglue.job import Job
+from hello import hello_world
 
 ## @params: [JOB_NAME]
 args = getResolvedOptions(sys.argv, ['JOB_NAME'])
 
+## call library
+hello_world()
 
 # ジョブ初期化
 sc = SparkContext()

@@ -181,6 +181,10 @@ https://bobbyhadz.com/blog/aws-cdk-iam-principal#account-principal-example-in-aw
     });
 ```
 
+> [new iam.ArnPrincipal('arn:aws:iam::123456789012:root')]
+
+https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_iam.ArnPrincipal.html
+
 
 #### python で実装する変換処理
 
@@ -232,3 +236,11 @@ test_prime.py           5      0   100%
 ---------------------------------------
 TOTAL                  30      1    97%
 ```
+
+#### snowpipeの作成
+
+**注意: Snowflake アカウントの Cloud Provider は AWS であり、かつ顧客管理 AWS S3 と同一リージョンである必要があります。**
+
+https://qiita.com/KimiyukiMuramatsu/items/a88b0e527377ecd35626
+
+https://www.qoosky.io/techs/8ec2ac140d#snowpipe
