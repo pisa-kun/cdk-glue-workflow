@@ -125,7 +125,8 @@ export class CdkGlueWorkflowStack extends cdk.Stack {
     // Deploy glue job to s3 bucket
     new BucketDeployment(this, "DeployGlueJobFiles", {
       sources: [Source.asset("./lib/assets")],
-      destinationBucket: s3Bucket
+      destinationBucket: s3Bucket,
+      destinationKeyPrefix: 'assets',
     });
 
     // Deploy csv to s3 bucket
@@ -135,6 +136,10 @@ export class CdkGlueWorkflowStack extends cdk.Stack {
       destinationKeyPrefix: "in"
     });
 
+    const extrapy1 = 's3://' + s3Bucket.bucketName + '/assets' + '/hello.py';
+    // const extrapy2 = 's3://' + s3Bucket.bucketName + '/assets' + '/world.py';
+    // const extra = extrapy1 + "," + extrapy2;
+
     const glueJob = new cdk.aws_glue.CfnJob(this, "simple-glue-job", {
       name: `${this.stackName}-glue-job`,
       role: role.roleArn,
@@ -142,7 +147,7 @@ export class CdkGlueWorkflowStack extends cdk.Stack {
       command: {
         name: "pythonshell", 
         pythonVersion: "3.9",
-        scriptLocation: "s3://" + s3Bucket.bucketName + "/glue.py"
+        scriptLocation: "s3://" + s3Bucket.bucketName + '/assets' + "/glue.py"
       },
       defaultArguments:{
         "--TempDir":"s3://" + s3Bucket.bucketName + "/lib/",
@@ -150,7 +155,7 @@ export class CdkGlueWorkflowStack extends cdk.Stack {
         "--output_bucket_name": s3Bucket.bucketName,
         "--output_prefix_path": "parquet",
         "--BUCKET": s3Bucket.bucketName,
-        '--extra-files': 's3://' + s3Bucket.bucketName + '/lib' + '/hello.py',
+        '--extra-files-py': extrapy1,
       },
       glueVersion : "3.0",
       maxRetries: 0,

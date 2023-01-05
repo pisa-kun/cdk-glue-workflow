@@ -1,2 +1,2 @@
-def hello_prime():
-    print("Hello World")
+def hello_print():
+    print("Hello")
