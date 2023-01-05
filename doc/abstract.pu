@@ -1,0 +1,53 @@
+@startuml
+!include<awslib/AWSCommon>
+!include<awslib/GroupIcons/Cloud>
+!include<awslib/GroupIcons/Region>
+!include<awslib/Storage/SimpleStorageServiceS3Standard>
+!include<awslib/Analytics/Glue>
+!include<awslib/ApplicationIntegration/EventBridge>
+!include<awslib/Database/Aurora>
+!include<awslib/Compute/Lambda>
+!include<awslib/ApplicationIntegration/SimpleQueueService>
+!include<awslib/ApplicationIntegration/SimpleNotificationService>
+
+<style>
+    rectangle{
+        BackGroundColor #89c3eb
+    }
+</style>
+
+left to right direction
+
+agent "Teams" as teams #fff
+
+Region(region , "ap-northeast-1", "東京リージョン"){
+    Cloud(awsA, "A account", ""){
+        Lambda(pub, "Put csv.gz", "VVork lambda execute") #F2F2F2
+        SimpleStorageServiceS3Standard(s3, "DataLake", "include jobscript, csv.gz, snappy.parquet")
+        Glue(glue, "Schedlue job", "every day AM4:00, translate csv.gz to snappy.parquet")
+        rectangle "Error Handle"{
+            EventBridge(errorhandle, "GlueJob Failed", "subscribe gluejob Failed event and execute lambda that Http message to Teams")
+            SimpleNotificationService(sns, "SNS", "message")
+            Lambda(messanger, "Error Messanger", "shape message and HTTP incoming webhook")
+        }
+    }
+
+    Cloud(awsB, "B account", ""){
+        Aurora(datalake, "Snowflake", "when recieved s3 put event, run Load command"){
+                SimpleQueueService(snowflake, "Snowflake endpoint", "SQS must be in the same region as S3")
+        }
+    }
+}
+
+pub --> s3 : Put csv.gz
+s3 <-- glue : AM 4.00, get csv.gz
+s3 <-- glue : Output snappy.parquet
+glue <-- errorhandle : subscribe job failed
+errorhandle --> sns : fire
+sns --> messanger : publish
+messanger --> teams : error messaged
+s3 --> snowflake : S3 event notification
+s3 <-- snowflake : copy into command
+snowflake --> sns : pipe error
+
+@enduml
