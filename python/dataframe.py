@@ -19,7 +19,8 @@ def translate(df: pd.DataFrame) -> pd.DataFrame:
 #print(translate(initialize()))
 
 def init_dataframe(data) -> pd.DataFrame:
-    df = pd.read_csv(data, compression='gzip', sep='\t', header=None, encoding='utf-8')
+    #df = pd.read_csv(data, encoding='utf-8')
+    df = pd.read_csv(data)
     #df["height"] = df["height"].apply(lambda x: x * 2)
     return df
 

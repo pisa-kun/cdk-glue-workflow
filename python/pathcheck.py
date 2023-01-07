@@ -1,36 +1,55 @@
 import os
+from typing import Tuple
+import re
 
-def is_targetpath(path: str) -> bool:
-    _, ext = os.path.splitext(path)
-    if ext != ".csv":
-        return False
-    
+def is_targetpath(objkey: str) -> bool:
     HIERARCHY_LAYERS = 6
-    # OSに依存しないセパレータ
-    hierach_array = path.split(os.sep)
+    hierach_array = objkey.split('/')
     if len(hierach_array) != HIERARCHY_LAYERS:
         return False
-
-    CHECK_DIR = os.path.join('Test','Test-Raw')
-    root_dir = os.sep.join(hierach_array[:2])
+    
+    CHECK_DIR = 'Test/Test-Raw'
+    root_dir = '/'.join(hierach_array[:2])
     if root_dir != CHECK_DIR:
         return False
+
+    basename = os.path.basename(objkey)
+    print(basename)
+    _, ext = basename.split('.', 1)
+    if ext != "csv.gz":
+        return False
     
+
     return True
 
-def translated_path(path: str) -> (str, str):
+def translated_path(objkey: str) -> Tuple[str, str, str]:
     HIERARCHY_LAYERS = 6
     # OSに依存しないセパレータ
-    hierach_array = path.split(os.sep)
+    hierach_array = objkey.split('/')
     if len(hierach_array) != HIERARCHY_LAYERS:
-        return '', ''
+        return '', '', ''
 
-    DEST_DIR = os.path.join('Test','Test-Load')
-    MOVED_DIR = os.path.join('Test','Test-Moved')
+    root_name = 'Test'
+    table_name = hierach_array[1]
+    if f'{root_name}/{table_name}/' not in [f'{root_name}/test/', f'{root_name}/tamago/', f'{root_name}/hoge/']:
+        return '', '', ''
 
-    dest = os.path.join(DEST_DIR, os.sep.join(hierach_array[2:]))
-    moved = os.path.join(MOVED_DIR, os.sep.join(hierach_array[2:]))
-    return dest, moved
+    basename = os.path.basename(objkey)
+    if table_name not in basename:
+        return '', '', ''
+
+    print(re.search(r'\d{8}', basename))
+    if re.search(r'\d{8}', basename) is None:
+        return '', '', ''
+    
+    # 拡張子が.csv.gzになるのでsplitextは使えない
+    filename, _ = basename.split('.', 1)
+    objpath = '/'.join(hierach_array[2:5])
+    dest = f'{root_name}/{table_name}-Load/{objpath}/{filename}.parquet'
+    moved = f'{root_name}/{table_name}-Moved/{objpath}/{filename}.csv.gz'
+    error = f'{root_name}/{table_name}-Error/{objpath}/{filename}.csv.gz'
+
+    return dest, moved, error
 
 # def usecase():
 #     ## dir.getAllobj(path)
