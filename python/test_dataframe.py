@@ -1,7 +1,7 @@
 import pandas as pd
 from pandas.util.testing import assert_frame_equal
 
-from dataframe import initialize, translate
+from dataframe import initialize, translate, init_dataframe
 
 df = pd.DataFrame({
     'name': ['rinze', 'natsuha', 'juri', 'kaho', 'chiyoko'],
@@ -19,3 +19,14 @@ def test_translate():
     'theme': ['BLUE', 'GREEN', 'YELLOW', '' , 'PINK'],
     })
     assert_frame_equal(translate(df), expected)
+
+def test_init_dataframe():
+    inp = init_dataframe("csv\\foo.test.csv.gz")
+    exp = pd.DataFrame({
+        'name': ['rinze', 'natsuha', 'cyoko'],
+        'actor': ["maruoka", "akiho", "harusu"],
+        'height': [178,173,169],
+    })
+    print(inp)
+    print(exp)
+    assert_frame_equal(inp, exp)

@@ -16,4 +16,11 @@ def translate(df: pd.DataFrame) -> pd.DataFrame:
     #df["theme"] = df["theme"].apply(lambda name: name.upper())
     return df
 
-print(translate(initialize()))
+#print(translate(initialize()))
+
+def init_dataframe(data) -> pd.DataFrame:
+    df = pd.read_csv(data, compression='gzip', sep='\t', header=None, encoding='utf-8')
+    #df["height"] = df["height"].apply(lambda x: x * 2)
+    return df
+
+#print(init_dataframe("csv\\foo.test.csv.gz"))
