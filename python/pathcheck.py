@@ -4,43 +4,53 @@ import re
 
 def is_targetpath(objkey: str) -> bool:
     HIERARCHY_LAYERS = 6
-    hierach_array = objkey.split('/')
-    if len(hierach_array) != HIERARCHY_LAYERS:
-        return False
-    
-    CHECK_DIR = 'Test/Test-Raw'
-    root_dir = '/'.join(hierach_array[:2])
-    if root_dir != CHECK_DIR:
-        return False
-
-    basename = os.path.basename(objkey)
-    print(basename)
-    _, ext = basename.split('.', 1)
-    if ext != "csv.gz":
-        return False
-    
-
-    return True
-
-def translated_path(objkey: str) -> Tuple[str, str, str]:
-    HIERARCHY_LAYERS = 6
     # OSに依存しないセパレータ
     hierach_array = objkey.split('/')
     if len(hierach_array) != HIERARCHY_LAYERS:
-        return '', '', ''
+        return False
 
     root_name = 'Test'
     table_name = hierach_array[1]
     if f'{root_name}/{table_name}/' not in [f'{root_name}/test/', f'{root_name}/tamago/', f'{root_name}/hoge/']:
-        return '', '', ''
+        return False
 
     basename = os.path.basename(objkey)
     if table_name not in basename:
-        return '', '', ''
+        return False
 
-    print(re.search(r'\d{8}', basename))
-    if re.search(r'\d{8}', basename) is None:
-        return '', '', ''
+    if re.search(r'\d{4}-\d{8}', basename) is None:
+        return False
+
+    _, ext = basename.split('.', 1)
+    if ext != "csv.gz":
+        return False
+
+    return True
+
+class TranslatedPaths:
+    def __init__(self, dest: str, moved: str, error: str):
+        self.dest = dest
+        self.moved = moved
+        self.error = error
+
+def translated_path(objkey: str) -> Tuple[bool, TranslatedPaths]:
+    HIERARCHY_LAYERS = 6
+    # OSに依存しないセパレータ
+    hierach_array = objkey.split('/')
+    if len(hierach_array) != HIERARCHY_LAYERS:
+        return False, None
+
+    root_name = 'Test'
+    table_name = hierach_array[1]
+    if f'{root_name}/{table_name}/' not in [f'{root_name}/test/', f'{root_name}/tamago/', f'{root_name}/hoge/']:
+        return False, None
+
+    basename = os.path.basename(objkey)
+    if table_name not in basename:
+        return False, None
+
+    if re.search(r'\d{4}-\d{8}', basename) is None:
+        return False, None
     
     # 拡張子が.csv.gzになるのでsplitextは使えない
     filename, _ = basename.split('.', 1)
@@ -49,7 +59,7 @@ def translated_path(objkey: str) -> Tuple[str, str, str]:
     moved = f'{root_name}/{table_name}-Moved/{objpath}/{filename}.csv.gz'
     error = f'{root_name}/{table_name}-Error/{objpath}/{filename}.csv.gz'
 
-    return dest, moved, error
+    return True, TranslatedPaths(dest, moved, error)
 
 # def usecase():
 #     ## dir.getAllobj(path)
@@ -60,3 +70,4 @@ def translated_path(objkey: str) -> Tuple[str, str, str]:
 
 #         dest, moved = translated_path(target)
 #         ## 処理する
+

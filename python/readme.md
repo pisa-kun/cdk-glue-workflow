@@ -62,3 +62,7 @@ def test_initialize():
     # assert_frame_equal(actual_df, expected_df)
    assert_frame_equal(initialize(), df)
 ```
+
+#### pytest レポート出力
+
+> pytest --cov --cov-branch --cov-report=html
