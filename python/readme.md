@@ -65,7 +65,7 @@ def test_initialize():
 
 #### pytest レポート出力
 
-> pytest --cov --cov-branch --cov-report=html
+> pytest --cov --cov-branch --cov-report=html --cov-report=term-missing
 
 
 #### 半角・全角処理
