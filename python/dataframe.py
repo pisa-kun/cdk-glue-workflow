@@ -44,16 +44,16 @@ def translate(df: pd.DataFrame, dataname: str) -> Tuple[bool, pd.DataFrame]:
         return True, df[isModel]
     except Exception:
         return False, None
-#print(translate(initialize()))
 
 def init_dataframe(data) -> pd.DataFrame:
-    #df = pd.read_csv(data, encoding='utf-8')
     df = pd.read_csv(data)
-    #df["height"] = df["height"].apply(lambda x: x * 2)
     return df
 
 
-df = init_dataframe("csv\\test_0001_20221109122531.csv")
+# df = init_dataframe("csv\\test_0001_20221109122531.csv")
+# print(df)
+# df.to_csv('csv\\test_0001_20221109122531.csv.gz', index=False, compression='gzip', encoding='utf-8')
+# result, translated = translate(df, 'test_0001_20221109122531.csv')
+# print(result, translated)
+df = init_dataframe('csv\\test_0001_20221109122531.csv.gz')
 print(df)
-result, translated = translate(df, 'test_0001_20221109122531.csv')
-print(result, translated)

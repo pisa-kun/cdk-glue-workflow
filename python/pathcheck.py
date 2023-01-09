@@ -18,7 +18,7 @@ def is_targetpath(objkey: str) -> bool:
     if table_name not in basename:
         return False
 
-    if re.search(r'\d{4}_\d{8}', basename) is None:
+    if re.search(r'\d{4}_\d{14}', basename) is None:
         return False
 
     _, ext = basename.split('.', 1)
@@ -49,7 +49,7 @@ def translated_path(objkey: str) -> Tuple[bool, TranslatedPaths]:
     if table_name not in basename:
         return False, None
 
-    if re.search(r'\d{4}_\d{8}', basename) is None:
+    if re.search(r'\d{4}_\d{14}', basename) is None:
         return False, None
     
     # 拡張子が.csv.gzになるのでsplitextは使えない

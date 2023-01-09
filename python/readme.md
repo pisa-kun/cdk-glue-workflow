@@ -115,3 +115,11 @@ E   [right]: [2022-11-08 17:54:30, 2022-11-08 17:54:30]
     print(df)
     assert_frame_equal(df, expected, check_datetimelike_compat=True)
 ```
+
+#### gzip圧縮されたs3上のcsv読み込み
+https://dev.classmethod.jp/articles/20200501-pandas-gzip-s3/
+```
+            content = inobj.get()['Body'].read()
+            bytes_io = io.BytesIO(content)
+            fh_r = pd.read_csv(bytes_io, compression='gzip', header=0, index=False, sep='\t', encoding='utf-8')
+```
