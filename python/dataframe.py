@@ -1,4 +1,5 @@
 import pandas as pd
+from typing import Tuple
 
 def initialize() -> pd.DataFrame:
     df = pd.DataFrame({
@@ -8,14 +9,16 @@ def initialize() -> pd.DataFrame:
     })
     return df
 
-def translate(df: pd.DataFrame) -> pd.DataFrame:
-    df["name"] = df["name"].apply(lambda name: name.upper())
-    ## Noneの場合はupper()が使えないので、Noneを空白文字に処理する関数を用意する 
-    # pythonの3項演算子 (lambda x: 'odd' if x % 2 else 'even')       
-    df["theme"] = df["theme"].apply(lambda name: '' if name is None else name.upper())
-    #df["theme"] = df["theme"].apply(lambda name: name.upper())
-    return df
-
+def translate(df: pd.DataFrame, dataname: str) -> Tuple[bool, pd.DataFrame]:
+    try:
+        df["name"] = df["name"].apply(lambda name: name.upper())
+        ## Noneの場合はupper()が使えないので、Noneを空白文字に処理する関数を用意する 
+        # pythonの3項演算子 (lambda x: 'odd' if x % 2 else 'even')       
+        df["theme"] = df["theme"].apply(lambda name: '' if name is None else name.upper())
+        #df["theme"] = df["theme"].apply(lambda name: name.upper())
+        return True, df
+    except Exception:
+        return False, None
 #print(translate(initialize()))
 
 def init_dataframe(data) -> pd.DataFrame:
@@ -23,5 +26,4 @@ def init_dataframe(data) -> pd.DataFrame:
     df = pd.read_csv(data)
     #df["height"] = df["height"].apply(lambda x: x * 2)
     return df
-
 #print(init_dataframe("csv\\foo.test.csv.gz"))
