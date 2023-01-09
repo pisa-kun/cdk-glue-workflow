@@ -244,3 +244,11 @@ TOTAL                  30      1    97%
 https://qiita.com/KimiyukiMuramatsu/items/a88b0e527377ecd35626
 
 https://www.qoosky.io/techs/8ec2ac140d#snowpipe
+
+#### ライブラリの追加
+""で囲む必要がありそう
+```typescript
+      defaultArguments:{
+        "--extra-py-files": extrapy1,
+      
+```

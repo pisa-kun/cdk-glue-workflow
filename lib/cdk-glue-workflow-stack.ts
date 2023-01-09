@@ -147,15 +147,18 @@ export class CdkGlueWorkflowStack extends cdk.Stack {
       command: {
         name: "pythonshell", 
         pythonVersion: "3.9",
-        scriptLocation: "s3://" + s3Bucket.bucketName + '/assets' + "/glue.py"
+        scriptLocation: "s3://" + s3Bucket.bucketName + '/assets' + "/glue.py",
       },
       defaultArguments:{
+        "--extra-py-files": extrapy1,
         "--TempDir":"s3://" + s3Bucket.bucketName + "/lib/",
         "--job-language":"python",
         "--output_bucket_name": s3Bucket.bucketName,
         "--output_prefix_path": "parquet",
         "--BUCKET": s3Bucket.bucketName,
-        '--extra-files-py': extrapy1,
+        '--KEY': env.key,
+        '--SECRET': env.secret,
+        '--additional-python-modules': 'jaconv',
       },
       glueVersion : "3.0",
       maxRetries: 0,
