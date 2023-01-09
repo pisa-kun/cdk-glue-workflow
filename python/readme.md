@@ -79,3 +79,39 @@ def test_initialize():
 
 #### 文字チェック
 シリアル情報の見切り、10or11文字、先頭2文字がアルファベット、残りが英数字、先頭2文字には特定文字は含まれない|
+
+#### print/loggingの出力場所
+
+- /aws-glue/python-jobs/output
+- /aws-glue/python-jobs/error
+
+printの場合はouput、loggingはerrorにデフォルト出力
+
+https://yomon.hatenablog.com/entry/2019/07/gluepythonshelllog
+
+#### dfの日付情報をＵＴするとき
+```py
+    expected = pd.DataFrame({
+        'format': ['0001', '0001'],
+        'serial': ['CFAA123', 'FZAA123'],
+        'inputdate': ["2022-11-08 17:54:30", "2022-11-08 17:54:30"],
+        'memo': ["0123456790ABCDefパイソン", "xyz789パイソンパイソン"],
+    })
+'''
+```
+E   DataFrame.iloc[:, 3] (column name="inputdate") values are different (100.0 %)
+E   [index]: [0, 1]
+E   [left]:  <DatetimeArray>
+E   ['2022-11-08 17:54:30', '2022-12-08 17:54:30']
+E   Length: 2, dtype: datetime64[ns]
+E   [right]: [2022-11-08 17:54:30, 2022-11-08 17:54:30]
+```
+
+- astypeで datetime型にした後、check_datetimelike_compat=Trueにする
+```
+    expected['inputdate'] = expected["inputdate"].astype('datetime64')
+    df['inputdate'] = df["inputdate"].astype('datetime64')
+    print(expected)
+    print(df)
+    assert_frame_equal(df, expected, check_datetimelike_compat=True)
+```

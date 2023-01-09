@@ -1,5 +1,8 @@
 import pandas as pd
 from typing import Tuple
+import re
+import datetime
+from convert import unificate_moji
 
 def initialize() -> pd.DataFrame:
     df = pd.DataFrame({
@@ -11,12 +14,34 @@ def initialize() -> pd.DataFrame:
 
 def translate(df: pd.DataFrame, dataname: str) -> Tuple[bool, pd.DataFrame]:
     try:
-        df["name"] = df["name"].apply(lambda name: name.upper())
-        ## Noneの場合はupper()が使えないので、Noneを空白文字に処理する関数を用意する 
-        # pythonの3項演算子 (lambda x: 'odd' if x % 2 else 'even')       
-        df["theme"] = df["theme"].apply(lambda name: '' if name is None else name.upper())
-        #df["theme"] = df["theme"].apply(lambda name: name.upper())
-        return True, df
+        # searchできない場合はm.groupで例外発生
+        m = re.search(r'\d{4}', dataname)
+        f = m.group()
+
+        m2 = re.search(r'\d{14}', dataname)
+        t = m2.group()
+
+        # フォーマットの追加
+        # 先頭に追加
+        df.insert(0, "format", f)
+        # 日付の追加
+        # 2行目に追加
+        df.insert(1, "time", datetime.datetime.strptime(t, "%Y%m%d%H%M%S"))
+
+        # CF, FZのみ抜き出し
+        isModel = df['serial'].str.startswith(("CF", "FZ"))
+
+        # - 削除
+        df['serial'] = df[isModel]['serial'].apply(lambda serial: serial.replace('-', ''))
+
+        # memoフィールドの英数字を全角から半角に
+        df['memo'] = df[isModel]['memo'].apply(lambda str: unificate_moji(str))
+
+        # JST to UTC
+        jst2utc = datetime.timedelta(hours=-9)
+        df['inputdate'] = df[isModel]['inputdate'].apply(lambda str: (datetime.datetime.strptime(str, "%Y-%m-%d %H:%M:%S.%f") + jst2utc))
+
+        return True, df[isModel]
     except Exception:
         return False, None
 #print(translate(initialize()))
@@ -26,4 +51,9 @@ def init_dataframe(data) -> pd.DataFrame:
     df = pd.read_csv(data)
     #df["height"] = df["height"].apply(lambda x: x * 2)
     return df
-#print(init_dataframe("csv\\foo.test.csv.gz"))
+
+
+df = init_dataframe("csv\\test_0001_20221109122531.csv")
+print(df)
+result, translated = translate(df, 'test_0001_20221109122531.csv')
+print(result, translated)
