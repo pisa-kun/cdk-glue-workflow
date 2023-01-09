@@ -136,7 +136,7 @@ export class CdkGlueWorkflowStack extends cdk.Stack {
       destinationKeyPrefix: "in"
     });
 
-    const extrapy1 = 's3://' + s3Bucket.bucketName + '/assets' + '/hello.py';
+    const extrapy1 = 's3://' + s3Bucket.bucketName + '/assets' + '/pathcheck.py';
     // const extrapy2 = 's3://' + s3Bucket.bucketName + '/assets' + '/world.py';
     // const extra = extrapy1 + "," + extrapy2;
 

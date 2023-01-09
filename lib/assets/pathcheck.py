@@ -22,6 +22,7 @@ def is_targetpath(objkey: str) -> bool:
         return False
 
     _, ext = basename.split('.', 1)
+    print(ext)
     if ext != "csv.gz":
         return False
 
