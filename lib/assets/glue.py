@@ -13,7 +13,7 @@ import pandas as pd
 TARGET_BUCKET = 'upload-pisakun-bucket'
 #s3 = boto3.resource('s3', aws_access_key_id=args['KEY'], aws_secret_access_key=args['SECRET'])
 
-ERROR_FLAG = False
+ERROR_FLAG = None
 s3 = boto3.resource('s3')
 def get_all_objects_high(bucket):
     bucket = s3.Bucket(bucket)
@@ -31,25 +31,31 @@ for i,obj in enumerate(iter(objs)):
     if result is False:
         continue
     print(paths.dest, paths.moved, paths.error)
-    ## 変換処理
-    # TODO:読み込み処理で失敗した場合もerrorにする処理必要
     s3obj = s3.Object(TARGET_BUCKET, obj.key)
-    body_in = gzip.decompress(s3obj.get()['Body'].read()).decode('utf-8')
-    buffer_in = io.StringIO(body_in)
-
-    df = init_dataframe(buffer_in)
-    result, translated = translate(df, obj.key)
     copy_source = {'Bucket': TARGET_BUCKET, 'Key': obj.key}
-    if result:
-        #translated.to_parquet()
+    ## 変換処理
+    try:
+        body_in = gzip.decompress(s3obj.get()['Body'].read()).decode('utf-8')
+        buffer_in = io.StringIO(body_in)
+
+        df = init_dataframe(buffer_in)
+        df_translated = translate(df, obj.key)
+    except Exception as e:
+        # 異常発生時
+        print("異常発生、移動処理")
+        logger.error(f"{obj.key} translated error.")
+        ERROR_FLAG = e
+        s3.meta.client.copy(copy_source, TARGET_BUCKET, paths.error)
+    else:
+        # 正常終了時
+        print("正常変換、移動処理")
+        #df_translated.to_parquet()
         s3.meta.client.copy(copy_source, TARGET_BUCKET, paths.dest)
         s3.meta.client.copy(copy_source, TARGET_BUCKET, paths.moved)
-    else:
-        logger.error(f"{obj.key} translated error.")
-        ERROR_FLAG = True
-        s3.meta.client.copy(copy_source, TARGET_BUCKET, paths.error)
     # 削除処理
     s3obj.delete()
     print(f'{obj.key}処理終了')
-## call library
-#hello_print()
+
+if ERROR_FLAG is not None:
+    print(ERROR_FLAG)
+    raise ERROR_FLAG
