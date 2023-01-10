@@ -4,6 +4,7 @@ from pathcheck import is_targetpath, translated_path, init_dataframe, translate
 #from awsglue.utils import getResolvedOptions
 import logging
 import io
+import gzip
 import pandas as pd
 
 
@@ -33,8 +34,8 @@ for i,obj in enumerate(iter(objs)):
     ## 変換処理
     # TODO:読み込み処理で失敗した場合もerrorにする処理必要
     s3obj = s3.Object(TARGET_BUCKET, obj.key)
-    body_in = s3obj.get()['Body'].read()
-    buffer_in = io.BytesIO(body_in)
+    body_in = gzip.decompress(s3obj.get()['Body'].read()).decode('utf-8')
+    buffer_in = io.StringIO(body_in)
 
     df = init_dataframe(buffer_in)
     result, translated = translate(df, obj.key)
