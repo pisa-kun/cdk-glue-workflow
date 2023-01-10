@@ -85,6 +85,22 @@ export class CdkGlueWorkflowStack extends cdk.Stack {
     });
     serviceRole.attachInlinePolicy(servicePolicy);
 
+    // create existed iam role resource
+    // other service already made iam role
+    const exRole = Role.fromRoleArn(this, 'exsit role', `arn:aws:iam::${env.id}:role/test-attach-role`);
+    const attachPolicy = new Policy(
+      this, 'snowflake_access_policy2',{
+        policyName: "SnowflakeAccessPolicy2",
+        statements:[
+          new PolicyStatement({
+                effect: Effect.ALLOW,
+                actions: ['s3:PutObject'],
+                resources: [`${s3Bucket.bucketArn}/${snowflakeEventPrefix}/*`],
+          }), ]
+      }
+    );
+    exRole.attachInlinePolicy(attachPolicy);
+
     // create sqs queue from ARN
     // https://medium.com/@shimo164/cdk-send-amazon-sns-from-aws-lambda-1a0e6c86073e
     // 1-1 Use existing SNS topic: Hard code the topic arn

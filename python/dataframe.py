@@ -92,4 +92,4 @@ print(df)
 df2 = translate2(df, 'hoge_0001_20230111122531.csv')
 print(df2)
 # # 全て""囲み
-# df2.to_csv("csv\\sample.csv", index=False, quoting=1)
+#df2.to_csv("csv\\hoge_0001_20230111122531.csv.gz", compression='gzip', index=False, quoting=1)
