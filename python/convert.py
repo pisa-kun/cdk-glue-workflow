@@ -9,10 +9,7 @@ def unificate_moji(moji: str) -> str:
 def is_target_serial(serial: str) -> bool:
     '''
     1文字目が数字、残りは英数字の合計10文字
-    '''
-    if (len(serial) == 10) is False:
-        return False
-    
+    '''    
     if re.match('^\d[0-9a-zA-Z]{9}$', serial) is None:
         return False
     

@@ -122,3 +122,11 @@ https://dev.classmethod.jp/articles/20200501-pandas-gzip-s3/
     body_in = gzip.decompress(s3obj.get()['Body'].read()).decode('utf-8')
     buffer_in = io.StringIO(body_in)
 ```
+
+#### NaN対策
+
+pandasはdataframe読み込み時に空白文字をNaNにしてしまう。文字列データに対して、処理を実施する場合に型が異なるエラーが発生するので空白文字にしたい
+
+https://megatenpa.com/python/pandas/pandas-blank-nan/
+
+df = pd.read_csv(data, na_filter=False)
