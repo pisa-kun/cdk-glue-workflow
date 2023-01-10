@@ -2,8 +2,9 @@ import pandas as pd
 from pandas.util.testing import assert_frame_equal
 import re
 import datetime
+import pytest
 
-from dataframe import translate, init_dataframe
+from dataframe import translate, init_dataframe, translate2
 
 def test_translate():
     expected = pd.DataFrame({
@@ -14,7 +15,7 @@ def test_translate():
     })
 
     inp = init_dataframe("csv\\test_0001_20221109122531.csv")
-    result, df = translate(inp, 'csv\\test_0001_20221109122531.csv')
+    df = translate(inp, 'csv\\test_0001_20221109122531.csv')
     # # 時刻形式を型一致させる
     m2 = re.search(r'\d{14}', 'test_0001_20221109122531.csv')
     t = m2.group()
@@ -24,11 +25,30 @@ def test_translate():
     print(expected)
     print(df)
     assert_frame_equal(df, expected, check_datetimelike_compat=True)
-    assert result == True
+
+def test_translate2():
+    expected = pd.DataFrame({
+        'format': ['0001', '0001','0001'],
+        'model': ['CF12345abc', 'FZ12345ABC', 'FZabcd12345'],
+        'serial': ['0H888aaaaa', '0000000000', 'abcdef'],
+        'data1': ['0123456790ABCDefパイソン', 'xyz789パイソンパイソン', 'xyz789'],
+        'data2': ['', '', '0123456790'],
+        'flag': [1, 1, 0],
+    }, )
+
+    inp = init_dataframe("csv\\hoge_0001_20230111122531.csv")
+    df = translate2(inp, 'csv\\hoge_0001_20230111122531.csv')
+    # # 時刻形式を型一致させる
+    m2 = re.search(r'\d{14}', 'hoge_0001_20230111122531.csv')
+    t = m2.group()
+    expected.insert(1, "time", datetime.datetime.strptime(t, "%Y%m%d%H%M%S"))
+    print(expected)
+    print(df)
+    assert_frame_equal(df, expected, check_datetimelike_compat=True)
 
 def test_translate_filename_error():
-    result, _ = translate('', '')
-    assert result == False
+    with pytest.raises(Exception) as e:
+        _ = translate('', '')
 
 def test_init_dataframe():
     inp = init_dataframe("csv\\test_0001_20221109122531.csv")

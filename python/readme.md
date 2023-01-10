@@ -130,3 +130,16 @@ pandasはdataframe読み込み時に空白文字をNaNにしてしまう。文�
 https://megatenpa.com/python/pandas/pandas-blank-nan/
 
 df = pd.read_csv(data, na_filter=False)
+
+#### 複合条件を満たすか
+
+```python
+        df['model'] = df["model"].apply(lambda model: model.replace("-", ""))
+        # FLAG=0 または ModelとSerialが条件を満たす
+        isFlag = df["flag"] == 0
+        isSerial = df["serial"].apply(lambda serial: is_target_serial(serial))
+        isModel = df["model"].apply(lambda model: is_target_model(model))
+        isTarget = isFlag | (isSerial & isModel)
+```
+
+Flagチェックが不要な場合は、isSerial & isModelでOK
