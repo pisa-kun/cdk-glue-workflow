@@ -4,13 +4,13 @@ import re
 import datetime
 from convert import unificate_moji
 
-def initialize() -> pd.DataFrame:
-    df = pd.DataFrame({
-        'name': ['rinze', 'natsuha', 'juri', 'kaho', 'chiyoko'],
-        'age': [16, 20, 17, 12, 17],
-        'theme': ['blue', 'green', 'yellow', None , 'pink'],
-    })
-    return df
+# def initialize() -> pd.DataFrame:
+#     df = pd.DataFrame({
+#         'name': ['rinze', 'natsuha', 'juri', 'kaho', 'chiyoko'],
+#         'age': [16, 20, 17, 12, 17],
+#         'theme': ['blue', 'green', 'yellow', None , 'pink'],
+#     })
+#     return df
 
 def translate(df: pd.DataFrame, dataname: str) -> Tuple[bool, pd.DataFrame]:
     try:

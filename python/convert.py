@@ -6,25 +6,29 @@ def unificate_moji(moji: str) -> str:
     converted_2_zen_moji = jaconv.hankaku2zenkaku(converted_2_han_moji, kana=True, digit=False, ascii=False)
     return converted_2_zen_moji
 
-def is_target_number(number: str) -> bool:
+def is_target_serial(serial: str) -> bool:
     '''
-    シリアル情報の見切り、10or11文字、先頭2文字がアルファベット、残りが英数字、
-    先頭2文字には特定文字(I,O)は含まれない|
+    1文字目が数字、残りは英数字の合計10文字
     '''
-    if (len(number) == 10 or len(number) == 11) is False:
+    if (len(serial) == 10) is False:
         return False
     
-    pre2 = number[0:2]
-    result = re.match('[a-zA-Z]', pre2)
-    if result is None:
+    if re.match('^\d[0-9a-zA-Z]{9}$', serial) is None:
         return False
     
-    result2 = re.match('[ioIO]', pre2)
-    if result2:
+    return True
+
+def is_target_model(model: str) -> bool:
+    '''
+    10or11文字、先頭2文字がCF or FZ、残りが英数字
+    '''
+    if (len(model) == 10 or len(model) == 11) is False:
         return False
 
-    result3 = re.match('^[a-zA-Z0-9]+$', number)
-    if result3 is None:
+    if (model.startswith(('CF', 'FZ'))) is False:
         return False
-
+    
+    if re.match('^[a-zA-Z0-9]+$', model) is None:
+        return False
+    
     return True

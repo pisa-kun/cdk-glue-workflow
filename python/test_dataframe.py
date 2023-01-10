@@ -3,16 +3,7 @@ from pandas.util.testing import assert_frame_equal
 import re
 import datetime
 
-from dataframe import initialize, translate, init_dataframe
-
-# df = pd.DataFrame({
-#     'name': ['rinze', 'natsuha', 'juri', 'kaho', 'chiyoko'],
-#     'age': [16, 20, 17, 12, 17],
-#     'theme': ['blue', 'green', 'yellow', None , 'pink'],
-# })
-
-# def test_initialize():
-#     assert_frame_equal(initialize(), df)
+from dataframe import translate, init_dataframe
 
 def test_translate():
     expected = pd.DataFrame({

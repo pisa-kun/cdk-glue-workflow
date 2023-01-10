@@ -77,8 +77,6 @@ def test_initialize():
 |  Ascii文字  |  変換無し  | - |
 |  全体複合  |  変換無し  | １２３456ＡＢＣdefｾﾞﾝｶｸｶﾀｶﾅゼンカク- ー/・!！ → 123456ABCdefゼンカクカタカナゼンカク- ー/・!！|
 
-#### 文字チェック
-シリアル情報の見切り、10or11文字、先頭2文字がアルファベット、残りが英数字、先頭2文字には特定文字は含まれない|
 
 #### print/loggingの出力場所
 
@@ -108,7 +106,7 @@ E   [right]: [2022-11-08 17:54:30, 2022-11-08 17:54:30]
 ```
 
 - astypeで datetime型にした後、check_datetimelike_compat=Trueにする
-```
+```python
     expected['inputdate'] = expected["inputdate"].astype('datetime64')
     df['inputdate'] = df["inputdate"].astype('datetime64')
     print(expected)
@@ -118,8 +116,9 @@ E   [right]: [2022-11-08 17:54:30, 2022-11-08 17:54:30]
 
 #### gzip圧縮されたs3上のcsv読み込み
 https://dev.classmethod.jp/articles/20200501-pandas-gzip-s3/
-```
-            content = inobj.get()['Body'].read()
-            bytes_io = io.BytesIO(content)
-            fh_r = pd.read_csv(bytes_io, compression='gzip', header=0, index=False, sep='\t', encoding='utf-8')
+
+```python
+    s3obj = s3.Object(TARGET_BUCKET, obj.key)
+    body_in = gzip.decompress(s3obj.get()['Body'].read()).decode('utf-8')
+    buffer_in = io.StringIO(body_in)
 ```
