@@ -7,7 +7,9 @@ export async function main(event: SQSEvent): Promise<APIGatewayProxyResultV2> {
 
         return {subject: body.Subject, message: body.Message};
     });
-    console.log('messages 👉', JSON.stringify(messages, null, 2));
+    const params = process.env.OUTPUTNAME
+    console.log(params);
+    //console.log('messages 👉', JSON.stringify(messages, null, 2));
     return {
         body: JSON.stringify({messages}),
         statusCode: 200,

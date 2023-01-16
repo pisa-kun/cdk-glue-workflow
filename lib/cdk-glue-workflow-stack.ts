@@ -121,6 +121,10 @@ export class CdkGlueWorkflowStack extends cdk.Stack {
       handler: 'main',
       entry: path.join(__dirname, '/../src/sqs2lambda.ts'),
       description: 'it logs sqs message',
+      //https://docs.aws.amazon.com/ja_jp/lambda/latest/dg/configuration-envvars.html
+      environment: {
+        OUTPUTNAME: "testtest",
+      }
     });
     polingLambda.addEventSource(new SqsEventSource(sqsFromArn, {batchSize: 10,}));
 
