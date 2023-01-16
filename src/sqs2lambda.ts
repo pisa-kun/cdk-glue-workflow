@@ -2,16 +2,16 @@ import {APIGatewayProxyResultV2, SQSEvent} from 'aws-lambda';
 
 export async function main(event: SQSEvent): Promise<APIGatewayProxyResultV2> {
     
-    const messages = event.Records.map(record => {
-        const body = JSON.parse(record.body) as {Subject: string; Message: string};
+    // const messages = event.Records.map(record => {
+    //     const body = JSON.parse(record.body) as {Subject: string; Message: string};
 
-        return {subject: body.Subject, message: body.Message};
-    });
+    //     return {subject: body.Subject, message: body.Message};
+    // });
     const params = process.env.OUTPUTNAME
     console.log(params);
     //console.log('messages 👉', JSON.stringify(messages, null, 2));
     return {
-        body: JSON.stringify({messages}),
+        body: JSON.stringify({params}),
         statusCode: 200,
     };
 }
