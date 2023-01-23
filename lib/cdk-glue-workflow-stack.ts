@@ -3,7 +3,7 @@ import { Construct } from 'constructs';
 import { Bucket, EventType } from 'aws-cdk-lib/aws-s3';
 import {  Rule } from 'aws-cdk-lib/aws-events';
 import { LambdaFunction, SnsTopic } from 'aws-cdk-lib/aws-events-targets';
-import { CfnTrigger, CfnWorkflow } from 'aws-cdk-lib/aws-glue';
+import { CfnCrawler, CfnTrigger, CfnWorkflow } from 'aws-cdk-lib/aws-glue';
 import { AccountPrincipal, Effect, ManagedPolicy, Policy, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import { BucketDeployment, Source } from 'aws-cdk-lib/aws-s3-deployment';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
@@ -15,6 +15,8 @@ import { SnsDestination } from 'aws-cdk-lib/aws-s3-notifications';
 import { Queue } from 'aws-cdk-lib/aws-sqs';
 import * as path from 'path';
 import { SqsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
+import { RateLimitedApiKey } from 'aws-cdk-lib/aws-apigateway';
+import { IAM } from 'aws-sdk';
 
 export class CdkGlueWorkflowStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -49,6 +51,26 @@ export class CdkGlueWorkflowStack extends cdk.Stack {
     role.addManagedPolicy(gluePolicy);
 
     s3Bucket.grantReadWrite(role);
+
+    const crawlerName = 'testCrawler';
+    const dbName = 'testDb';
+
+    role.addToPolicy(
+      new PolicyStatement({
+        effect: Effect.ALLOW,
+        resources:[`${s3Bucket.bucketArn}/*`],
+        actions:["s3:GetObject", "s3:PutObject"]
+      }),
+    );
+
+    const crawler = new CfnCrawler(this, crawlerName, {
+      role: role.roleArn,
+      databaseName: dbName,
+      targets:{
+        s3Targets:[{path:`${s3Bucket.s3UrlForObject()}/` }]
+      },
+      configuration: '{"Version": 1.0, "Grouping": {"TableGroupingPolicy": "CombineCompatibleSchemas"}}'
+    });
 
     // snowflake external permission
     // https://docs.snowflake.com/ja/user-guide/data-load-s3-config-storage-integration.html
